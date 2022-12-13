@@ -6,7 +6,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface ProductRepositoryContract
 {
-    public function paginateWithSearch(string $search, string $field, $perPage, int $limit = 20): LengthAwarePaginator;
+    public function list();
     public function findOrFail(int $id);
     public function create(array $data);
     public function update(int $id, array $data);

@@ -6,44 +6,50 @@ use App\Jobs\ProductCreated;
 use App\Jobs\ProductDeleted;
 use App\Jobs\ProductUpdated;
 use App\Models\Product;
+use App\Repositories\Contracts\ProductRepositoryContract;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
+    private $repository;
 
-    public function index(Request $request)
+    public function __construct(ProductRepositoryContract $repository)
     {
-        return Product::all();
+        $this->repository = $repository;
+    }
+
+    public function index()
+    {
+        return $this->repository->list();
     }
 
     public function show($id)
     {
-        return Product::find($id);
+        return $this->repository->findOrFail($id);
     }
 
     public function store(Request $request)
     {
-        $product = Product::create($request->only(['title', 'price', 'imageurl']));
+        $product = $this->repository->create($request->only(['title', 'price', 'imageurl']));
 
-        ProductCreated::dispatch($product->toArray())->onQueue('main_queue');
+        ProductCreated::dispatch($product)->onQueue('main_queue');
 
         return response($product, Response::HTTP_CREATED);
     }
 
     public function update($id, Request $request)
     {
-        $product = Product::find($id);
-        $product->update($request->only(['title', 'price', 'imageurl']));
+        $product = $this->repository->update($id, $request->only(['title', 'price', 'imageurl']));
 
-        ProductUpdated::dispatch($product->toArray())->onQueue('main_queue');
+        ProductUpdated::dispatch($product)->onQueue('main_queue');
 
         return response($product, Response::HTTP_ACCEPTED);
     }
 
     public function destroy($id)
     {
-        Product::destroy($id);
+        $this->repository->trash($id);
 
         ProductDeleted::dispatch($id)->onQueue('main_queue');
 
